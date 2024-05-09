@@ -11,7 +11,7 @@
   <memoryBacking>
     <hugepages/>
   </memoryBacking>
-  <vcpu placement="static">12</vcpu>
+  <vcpu placement="static">16</vcpu>
   <iothreads>2</iothreads>
   <cputune>
     <vcpupin vcpu="0" cpuset="0"/>
@@ -26,9 +26,13 @@
     <vcpupin vcpu="9" cpuset="9"/>
     <vcpupin vcpu="10" cpuset="10"/>
     <vcpupin vcpu="11" cpuset="11"/>
-    <emulatorpin cpuset="12-13"/>
-    <iothreadpin iothread="1" cpuset="8-9"/>
-    <iothreadpin iothread="2" cpuset="10-11"/>
+    <vcpupin vcpu="12" cpuset="12"/>
+    <vcpupin vcpu="13" cpuset="13"/>
+    <vcpupin vcpu="14" cpuset="14"/>
+    <vcpupin vcpu="15" cpuset="15"/>
+    <emulatorpin cpuset="16-17"/>
+    <iothreadpin iothread="1" cpuset="12-13"/>
+    <iothreadpin iothread="2" cpuset="14-15"/>
   </cputune>
   <os firmware="efi">
     <type arch="x86_64" machine="pc-q35-8.1">hvm</type>
@@ -38,7 +42,6 @@
     </firmware>
     <loader readonly="yes" secure="yes" type="pflash" format="qcow2">/usr/share/edk2/ovmf/OVMF_CODE_4M.secboot.qcow2</loader>
     <nvram template="/usr/share/edk2/ovmf/OVMF_VARS_4M.secboot.qcow2" format="qcow2">/var/lib/libvirt/qemu/nvram/win11-gpu_VARS.qcow2</nvram>
-    <boot dev="hd"/>
     <bootmenu enable="yes"/>
   </os>
   <features>
@@ -58,7 +61,7 @@
     <smm state="on"/>
   </features>
   <cpu mode="host-passthrough" check="partial" migratable="on">
-    <topology sockets="1" dies="1" cores="6" threads="2"/>
+    <topology sockets="1" dies="1" clusters="1" cores="16" threads="1"/>
     <cache mode="passthrough"/>
   </cpu>
   <clock offset="localtime">
@@ -78,15 +81,16 @@
     <emulator>/usr/bin/qemu-system-x86_64</emulator>
     <disk type="file" device="disk">
       <driver name="qemu" type="qcow2"/>
-      <source file="/home/poriesto/data/KVM/win11-gpu.qcow2"/>
+      <source file="/media/poriesto/data/KVM/win11-gpu.qcow2"/>
       <target dev="vda" bus="virtio"/>
+      <boot order="1"/>
       <address type="pci" domain="0x0000" bus="0x04" slot="0x00" function="0x0"/>
     </disk>
-    <disk type="file" device="disk">
-      <driver name="qemu" type="qcow2"/>
-      <source file="/home/poriesto/data/KVM/w11-gpu-data.qcow2"/>
-      <target dev="vdb" bus="virtio"/>
-      <address type="pci" domain="0x0000" bus="0x07" slot="0x00" function="0x0"/>
+    <disk type="block" device="disk">
+      <driver name="qemu" type="raw" cache="none" io="native" discard="unmap"/>
+      <source dev="/dev/kvm_nvme/w11-data"/>
+      <target dev="vdc" bus="virtio"/>
+      <address type="pci" domain="0x0000" bus="0x0c" slot="0x00" function="0x0"/>
     </disk>
     <controller type="usb" index="0" model="qemu-xhci" ports="15">
       <address type="pci" domain="0x0000" bus="0x02" slot="0x00" function="0x0"/>
@@ -178,15 +182,22 @@
       <address type="pci" domain="0x0000" bus="0x00" slot="0x1f" function="0x2"/>
     </controller>
     <interface type="network">
-      <mac address="52:54:00:c3:90:93"/>
-      <source network="default"/>
+      <mac address="52:54:00:61:84:41"/>
+      <source network="network"/>
       <model type="e1000e"/>
-      <address type="pci" domain="0x0000" bus="0x0a" slot="0x00" function="0x0"/>
+      <link state="up"/>
+      <address type="pci" domain="0x0000" bus="0x09" slot="0x00" function="0x0"/>
     </interface>
     <channel type="spicevmc">
       <target type="virtio" name="com.redhat.spice.0"/>
       <address type="virtio-serial" controller="0" bus="0" port="1"/>
     </channel>
+    <input type="mouse" bus="virtio">
+      <address type="pci" domain="0x0000" bus="0x0a" slot="0x00" function="0x0"/>
+    </input>
+    <input type="keyboard" bus="virtio">
+      <address type="pci" domain="0x0000" bus="0x0b" slot="0x00" function="0x0"/>
+    </input>
     <input type="mouse" bus="ps2"/>
     <input type="keyboard" bus="ps2"/>
     <tpm model="tpm-crb">
@@ -200,55 +211,34 @@
       <address type="pci" domain="0x0000" bus="0x00" slot="0x1b" function="0x0"/>
     </sound>
     <audio id="1" type="jack">
-      <input clientName="win11-gpu" connectPorts="input-name"/>
-      <output clientName="win11-gpu" connectPorts="output-name"/>
+      <input clientName="win11-gpu" connectPorts="Built-in Audio Analog Stereo"/>
+      <output clientName="win11-gpu" connectPorts="playback_F[L|R]"/>
     </audio>
     <video>
       <model type="none"/>
     </video>
     <hostdev mode="subsystem" type="pci" managed="yes">
       <source>
-        <address domain="0x0000" bus="0x01" slot="0x00" function="0x0"/>
+        <address domain="0x0000" bus="0x2e" slot="0x00" function="0x0"/>
       </source>
-      <address type="pci" domain="0x0000" bus="0x06" slot="0x00" function="0x0"/>
+      <address type="pci" domain="0x0000" bus="0x05" slot="0x00" function="0x0"/>
     </hostdev>
     <hostdev mode="subsystem" type="pci" managed="yes">
       <source>
-        <address domain="0x0000" bus="0x01" slot="0x00" function="0x1"/>
+        <address domain="0x0000" bus="0x01" slot="0x00" function="0x0"/>
       </source>
       <address type="pci" domain="0x0000" bus="0x01" slot="0x00" function="0x0"/>
     </hostdev>
     <hostdev mode="subsystem" type="pci" managed="yes">
       <source>
-        <address domain="0x0000" bus="0x2e" slot="0x00" function="0x0"/>
+        <address domain="0x0000" bus="0x01" slot="0x00" function="0x1"/>
       </source>
-      <address type="pci" domain="0x0000" bus="0x09" slot="0x00" function="0x0"/>
+      <address type="pci" domain="0x0000" bus="0x06" slot="0x00" function="0x0"/>
     </hostdev>
     <hostdev mode="subsystem" type="usb" managed="yes">
       <source>
-        <vendor id="0x2f68"/>
-        <product id="0x8040"/>
-      </source>
-      <address type="usb" bus="0" port="2"/>
-    </hostdev>
-    <hostdev mode="subsystem" type="usb" managed="yes">
-      <source>
-        <vendor id="0x260d"/>
-        <product id="0x1114"/>
-      </source>
-      <address type="usb" bus="0" port="3"/>
-    </hostdev>
-    <hostdev mode="subsystem" type="usb" managed="yes">
-      <source>
-        <vendor id="0x2972"/>
-        <product id="0x0047"/>
-      </source>
-      <address type="usb" bus="0" port="4"/>
-    </hostdev>
-    <hostdev mode="subsystem" type="usb" managed="yes">
-      <source>
-        <vendor id="0x0bda"/>
-        <product id="0x8153"/>
+        <vendor id="0x045e"/>
+        <product id="0x028e"/>
       </source>
       <address type="usb" bus="0" port="1"/>
     </hostdev>
@@ -267,5 +257,8 @@
     <qemu:arg value="type=0,vendor=American Megatrends International LLC.,version=FB0E,date=12/13/2022,release=5.24"/>
     <qemu:arg value="-smbios"/>
     <qemu:arg value="type=1,manufacturer=GIGABYTE,product=AORUS 5 KE,serial=SN22256J001448,uuid=3041314d-3136-3030-3435-350000000000,family=AORUS"/>
+    <qemu:env name="PIPEWIRE_RUNTIME_DIR" value="/run/user/1000"/>
+    <qemu:env name="PIPEWIRE_LATENCY" value="512/48000"/>
   </qemu:commandline>
 </domain>
+disk
