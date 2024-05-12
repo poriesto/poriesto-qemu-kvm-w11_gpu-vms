@@ -79,18 +79,18 @@
   </pm>
   <devices>
     <emulator>/usr/bin/qemu-system-x86_64</emulator>
-    <disk type="file" device="disk">
-      <driver name="qemu" type="qcow2"/>
-      <source file="/media/poriesto/data/KVM/win11-gpu.qcow2"/>
-      <target dev="vda" bus="virtio"/>
-      <boot order="1"/>
-      <address type="pci" domain="0x0000" bus="0x04" slot="0x00" function="0x0"/>
-    </disk>
     <disk type="block" device="disk">
       <driver name="qemu" type="raw" cache="none" io="native" discard="unmap"/>
       <source dev="/dev/kvm_nvme/w11-data"/>
       <target dev="vdc" bus="virtio"/>
       <address type="pci" domain="0x0000" bus="0x0c" slot="0x00" function="0x0"/>
+    </disk>
+    <disk type="block" device="disk">
+      <driver name="qemu" type="raw" cache="none" io="native" discard="unmap"/>
+      <source dev="/dev/kvm_nvme/win11-sys"/>
+      <target dev="vdd" bus="virtio"/>
+      <boot order="1"/>
+      <address type="pci" domain="0x0000" bus="0x04" slot="0x00" function="0x0"/>
     </disk>
     <controller type="usb" index="0" model="qemu-xhci" ports="15">
       <address type="pci" domain="0x0000" bus="0x02" slot="0x00" function="0x0"/>
@@ -235,13 +235,6 @@
       </source>
       <address type="pci" domain="0x0000" bus="0x06" slot="0x00" function="0x0"/>
     </hostdev>
-    <hostdev mode="subsystem" type="usb" managed="yes">
-      <source>
-        <vendor id="0x045e"/>
-        <product id="0x028e"/>
-      </source>
-      <address type="usb" bus="0" port="1"/>
-    </hostdev>
     <watchdog model="itco" action="reset"/>
     <memballoon model="none"/>
     <shmem name="looking-glass">
@@ -261,4 +254,3 @@
     <qemu:env name="PIPEWIRE_LATENCY" value="512/48000"/>
   </qemu:commandline>
 </domain>
-disk
